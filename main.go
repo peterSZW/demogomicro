@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
-
 	proto "demogomicro/greeter" //这里写你的proto文件放置路劲
+	"fmt"
 	micro "github.com/micro/go-micro"
+
+	_ "github.com/micro/go-plugins/registry/consul"
 
 	mqps "github.com/zengming00/go-qps"
 	"math/rand"
@@ -19,19 +20,22 @@ type Greeter struct{}
 
 func (g *Greeter) Hello(ctx context.Context, req *proto.HelloRequest, rsp *proto.HelloResponse) error {
 	rsp.Greeting = req.Name
-
 	qps.Count()
-
 	return nil
 }
 
 func main() {
 
-	go http_server()
+	//Just for qps
+	go qps_http_server()
 
 	// Create a new service. Optionally include some options here.
 	service := micro.NewService(
 		micro.Name("greeter"),
+		micro.Version("latest"),
+		micro.Metadata(map[string]string{
+			"type": "helloworld",
+		}),
 	)
 
 	// Init will parse the command line flags.
@@ -46,7 +50,7 @@ func main() {
 	}
 }
 
-func http_server() {
+func qps_http_server() {
 	rand.Seed(time.Now().UnixNano())
 
 	// Statistics every second, a total of 3600 data
@@ -74,6 +78,7 @@ func http_server() {
 	})
 	err := http.ListenAndServe(":8181", nil)
 	if err != nil {
-		panic(err)
+		//panic(err)
+		fmt.Println(err)
 	}
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	_ "github.com/micro/go-plugins/registry/consul"
 
 	proto "demogomicro/greeter" //这里写你的proto文件放置路劲
 	micro "github.com/micro/go-micro"
