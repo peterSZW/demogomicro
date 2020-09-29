@@ -19,10 +19,12 @@ var (
 func broker_start() {
 	//broker初始化
 	if err := broker.Init(); err != nil {
-		panic(err.Error())
+		fmt.Println(err)
+		//panic(err.Error())
 	}
 	if err := broker.Connect(); err != nil {
-		panic(err.Error())
+		fmt.Println(err)
+		//panic(err.Error())
 	}
 	//异步调用broker的发布与订阅
 	go publish()
@@ -41,7 +43,8 @@ func publish() {
 		})
 
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(err)
+			//panic(err.Error())
 		}
 	}
 }
@@ -57,7 +60,8 @@ func subscribe() {
 	})
 
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err)
+		//panic(err.Error())
 	}
 }
 
@@ -71,42 +75,38 @@ func main() {
 	flag.IntVar(&c, "c", 10, "go routine number")
 	flag.IntVar(&n, "n", 10000, "call times")
 
-	// Create a new service. Optionally include some options here.
-	// service := micro.NewService(micro.Name("greeter.client"))
-	// service.Init()
-
 	broker_start()
-
-	// Create new greeter client
 
 	fmt.Println("c:", c, "n:", n)
 
 	for j := 0; j < c; j++ {
 		wg.Add(1)
-		go test(j)
+		go CallMicroSerice(j)
 	}
 	wg.Wait()
 	// Call the greeter
 
 }
-func test(j int) {
-
+func CallMicroSerice(j int) {
+	// Create a new service. Optionally include some options here.
 	service := micro.NewService(micro.Name("greeter.client"))
 	service.Init()
 
+	// Create new greeter client
 	greeter := proto.NewGreeterService("greeter", service.Client())
 	var s string
 	stime := time.Now()
 	for i := 0; i < n; i++ {
 
-		rsp, err := greeter.Hello(context.TODO(), &proto.HelloRequest{Name: "John"})
+		// Call the greeter
+		rsp, err := greeter.Hello(context.Background(), &proto.HelloRequest{Name: "John"})
 		if err != nil {
-			fmt.Println("greeter.Hello:", err)
+			fmt.Println("greeter.Hello:", j, i, err)
 		} else {
+			// save response
 			s = rsp.Greeting
 		}
-		// Print response
-		//fmt.Println(rsp.Greeting)
+
 		// fmt.Println(j, i)
 
 	}
