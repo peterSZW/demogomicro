@@ -5,9 +5,12 @@ import (
 	proto "demogomicro/greeter" //这里写你的proto文件放置路劲
 	"flag"
 	"fmt"
+	log "github.com/inconshreveable/log15"
 	micro "github.com/micro/go-micro"
 	"github.com/micro/go-micro/broker"
 	_ "github.com/micro/go-plugins/registry/consul"
+
+	"runtime/debug"
 	"sync"
 	"time"
 )
@@ -17,6 +20,7 @@ var (
 )
 
 func broker_start() {
+
 	//broker初始化
 	if err := broker.Init(); err != nil {
 		fmt.Println(err)
@@ -27,10 +31,13 @@ func broker_start() {
 		//panic(err.Error())
 	}
 	//异步调用broker的发布与订阅
+
+	subscribe()
 	go publish()
-	go subscribe()
+
 }
 func publish() {
+
 	t := time.NewTicker(time.Second)
 
 	for times := range t.C {
@@ -43,8 +50,8 @@ func publish() {
 		})
 
 		if err != nil {
-			fmt.Println(err)
-			//panic(err.Error())
+			log.Crit("subscribe", "err", err)
+
 		}
 	}
 }
@@ -58,10 +65,8 @@ func subscribe() {
 		fmt.Println(h)
 		return nil
 	})
-
 	if err != nil {
-		fmt.Println(err)
-		//panic(err.Error())
+		log.Crit("subscribe", "err", err)
 	}
 }
 
@@ -69,28 +74,40 @@ var c int
 var n int
 
 var wg sync.WaitGroup
+var service micro.Service
 
 func main() {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Crit("main", "server crash: ", err)
+			log.Crit("main", "stack: ", string(debug.Stack()))
+		}
+	}()
 
 	flag.IntVar(&c, "c", 10, "go routine number")
 	flag.IntVar(&n, "n", 10000, "call times")
 
+	// Create a new service. Optionally include some options here.
+	service = micro.NewService(micro.Name("greeter.client"))
+	service.Init()
+
+	// Start broker subscribe and publish thread
 	broker_start()
 
-	fmt.Println("c:", c, "n:", n)
-
-	for j := 0; j < c; j++ {
-		wg.Add(1)
-		go CallMicroSerice(j)
+	if true {
+		fmt.Println("c:", c, "n:", n)
+		for j := 0; j < c; j++ {
+			wg.Add(1)
+			// Call the greeter
+			go CallMicroSerice(j)
+		}
 	}
+
+	// wait all process end
 	wg.Wait()
-	// Call the greeter
 
 }
 func CallMicroSerice(j int) {
-	// Create a new service. Optionally include some options here.
-	service := micro.NewService(micro.Name("greeter.client"))
-	service.Init()
 
 	// Create new greeter client
 	greeter := proto.NewGreeterService("greeter", service.Client())
@@ -106,9 +123,7 @@ func CallMicroSerice(j int) {
 			// save response
 			s = rsp.Greeting
 		}
-
 		// fmt.Println(j, i)
-
 	}
 	etime := time.Now()
 	fmt.Println(etime.Sub(stime))

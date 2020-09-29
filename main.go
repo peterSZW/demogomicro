@@ -16,7 +16,7 @@ import (
 
 var (
 	topic = "mu.micro.book.topic.payment.done"
-	b     broker.Broker
+ 
 )
 
 var qps *mqps.QP

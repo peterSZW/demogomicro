@@ -19,6 +19,7 @@ require (
 	github.com/hashicorp/mdns v1.0.1 // indirect
 	github.com/hashicorp/memberlist v0.1.4 // indirect
 	github.com/hashicorp/serf v0.8.3 // indirect
+	github.com/inconshreveable/log15 v0.0.0-20200109203555-b30bc20e4fd1
 	github.com/kisielk/errcheck v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/micro/go-micro v1.18.0
