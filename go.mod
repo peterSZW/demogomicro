@@ -24,6 +24,7 @@ require (
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/micro/go-micro v1.18.0
 	github.com/micro/go-plugins/registry/consul v0.0.0-20200119172437-4fe21aa238fd
+	github.com/micro/go-plugins/wrapper/ratelimiter/uber v0.0.0-20200119172437-4fe21aa238fd
 	github.com/mitchellh/gox v1.0.1 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
 	github.com/onsi/ginkgo v1.8.0 // indirect

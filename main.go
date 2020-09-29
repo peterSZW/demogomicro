@@ -12,11 +12,12 @@ import (
 	"math/rand"
 	"net/http"
 	"time"
+
+	limiter "github.com/micro/go-plugins/wrapper/ratelimiter/uber"
 )
 
 var (
 	topic = "mu.micro.book.topic.payment.done"
- 
 )
 
 var qps *mqps.QP
@@ -76,6 +77,8 @@ func main() {
 	//Just for qps
 	go qps_http_server()
 
+	qps := 10000 //uber 的限流
+
 	// Create a new service. Optionally include some options here.
 	service := micro.NewService(
 		micro.Name("greeter"),
@@ -83,6 +86,9 @@ func main() {
 		micro.Metadata(map[string]string{
 			"type": "helloworld",
 		}),
+		micro.RegisterTTL(4*time.Second),
+		micro.RegisterInterval(2*time.Second),
+		micro.WrapHandler(limiter.NewHandlerWrapper(qps)),
 	)
 
 	// Init will parse the command line flags.
