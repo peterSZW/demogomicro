@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	proto "demogomicro/greeter" //这里写你的proto文件放置路劲
+	"flag"
 	"fmt"
 	micro "github.com/micro/go-micro"
 	"github.com/micro/go-micro/broker"
 	_ "github.com/micro/go-plugins/registry/consul"
+	"sync"
 	"time"
 )
 
@@ -59,31 +61,57 @@ func subscribe() {
 	}
 }
 
+var c int
+var n int
+
+var wg sync.WaitGroup
+
 func main() {
+
+	flag.IntVar(&c, "c", 10, "go routine number")
+	flag.IntVar(&n, "n", 10000, "call times")
+
 	// Create a new service. Optionally include some options here.
-	service := micro.NewService(micro.Name("greeter.client"))
-	service.Init()
+	// service := micro.NewService(micro.Name("greeter.client"))
+	// service.Init()
 
 	broker_start()
 
 	// Create new greeter client
-	greeter := proto.NewGreeterService("greeter", service.Client())
 
+	fmt.Println("c:", c, "n:", n)
+
+	for j := 0; j < c; j++ {
+		wg.Add(1)
+		go test(j)
+	}
+	wg.Wait()
 	// Call the greeter
+
+}
+func test(j int) {
+
+	service := micro.NewService(micro.Name("greeter.client"))
+	service.Init()
+
+	greeter := proto.NewGreeterService("greeter", service.Client())
 	var s string
 	stime := time.Now()
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < n; i++ {
 
 		rsp, err := greeter.Hello(context.TODO(), &proto.HelloRequest{Name: "John"})
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("greeter.Hello:", err)
+		} else {
+			s = rsp.Greeting
 		}
 		// Print response
 		//fmt.Println(rsp.Greeting)
-		s = rsp.Greeting
+		// fmt.Println(j, i)
 
 	}
 	etime := time.Now()
 	fmt.Println(etime.Sub(stime))
 	fmt.Println(s)
+	wg.Done()
 }
